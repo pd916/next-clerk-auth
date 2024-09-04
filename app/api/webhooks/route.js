@@ -55,18 +55,41 @@ export default async function handler(req) {
 
   // Do something with the payload
   // For this guide, you simply log the payload to the console
-  const { id } = evt.data;
+  const { id } = evt?.data;
   const eventType = evt.type;
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
   console.log('Webhook body:', body)
 
-  if(eventType === "user.created"){
-    console.log("user created")
+  if(eventType === "user.created" || eventType === "user.updated"){
+    const {id, first_name, last_name, email, image_url, email_addresses, username} = evt?.data
+    try{
+      await createOrUpdateUser(
+        id,
+        first_name,
+        last_name,
+        image_url,
+        email_addresses,
+        username
+      );
+      return new Response("User is created or updated", {status:200})
+    }catch(error){
+      console.log(error)
+      return new Response ('Error occured', {
+        status:400
+      })
+    }
   }
 
-  if(eventType === "user.updated"){
-    console.log("User Updated")
+  if(eventType === "user.deleted"){
+    const {id} = evt?.data;
+    try{
+      await deletedUser(id);
+      return new Response("User is deleted", {status:200})
+    }catch(error){
+      console.log('Error deleting user:', error);
+      return new Response("Error Occured", {status:400})
+    }
   }
 
-  return res.status(200).json({ response: 'Success' })
+  return new Response('',{status: 200 })
 }
